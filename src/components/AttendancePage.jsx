@@ -1,16 +1,22 @@
 import styles from "../utils/styles";
 
-export default function HomeView({
-  practices,
+/**
+ * 出席・到着入力ページ
+ * 選択した練習日で、メンバーの出席・到着を入力する
+ */
+export default function AttendancePage({
   currentPractice,
-  setSelectedPracticeId,
+  setHomeStep,
   toggleAttend,
   toggleArrived,
 }) {
   if (!currentPractice)
     return (
       <div style={styles.page}>
-        練習日がありません。管理者に連絡してください。
+        <div style={styles.heroSection}>
+          <h1 style={styles.heroTitle}>練習日がありません。</h1>
+          <p style={styles.heroSub}>管理者に連絡してください。</p>
+        </div>
       </div>
     );
 
@@ -32,20 +38,23 @@ export default function HomeView({
         </h1>
       </div>
 
-      {/* 練習日選択 */}
+      {/* 練習日表示・変更 */}
       <div style={styles.practiceSelectRow}>
         <span style={{ fontWeight: "bold" }}>📅 対象の練習日:</span>
-        <select
-          style={styles.selectBox}
-          value={currentPractice.id}
-          onChange={(e) => setSelectedPracticeId(e.target.value)}
+        <span style={{ flex: 1, fontSize: 15, fontWeight: 700 }}>
+          {currentPractice.date}
+        </span>
+        <button
+          style={{
+            ...styles.smBtn,
+            background: "#f0f0f0",
+            color: "#555",
+            padding: "8px 14px",
+          }}
+          onClick={() => setHomeStep("selectDate")}
         >
-          {practices.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.date} の練習
-            </option>
-          ))}
-        </select>
+          練習日を変更
+        </button>
       </div>
 
       <div style={styles.statsRow}>
