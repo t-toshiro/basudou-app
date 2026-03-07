@@ -1,4 +1,5 @@
-import { useState } from "react";
+// src/App.jsx
+import { useState, useEffect } from "react";
 import styles from "./utils/styles";
 import { ROSTER, distributeTeams } from "./utils/data";
 import Header from "./components/Header";
@@ -6,33 +7,48 @@ import PracticeSelectPage from "./components/PracticeSelectPage";
 import AttendancePage from "./components/AttendancePage";
 import AdminView from "./components/AdminView";
 
+// 🔥 Firebase用のインポートを追加
+import { db } from "./utils/firebase";
+import { collection, doc, setDoc, onSnapshot } from "firebase/firestore";
+
 export default function App() {
   const [view, setView] = useState("home"); // home | admin
   const [homeStep, setHomeStep] = useState("selectDate"); // selectDate | attendance
 
-  // 練習日のデータリスト（初期状態として1日分を入れておく）
-  const [practices, setPractices] = useState([
-    {
-      id: "p_init",
-      date: "2026-03-07",
-      attendance: ROSTER.map((m) => ({
-        ...m,
-        attending: false,
-        arrived: false,
-        team: null,
-      })),
-      teams: [],
-      teamsGenerated: false,
-    },
-  ]);
-  const [selectedPracticeId, setSelectedPracticeId] = useState("p_init");
+  // 🔥 初期値を空配列にし、Firebaseから取得するように変更
+  const [practices, setPractices] = useState([]);
+  const [selectedPracticeId, setSelectedPracticeId] = useState("");
 
-  // 選択中の練習日データを取得
+  // ==========================================
+  // 🔥 1. リアルタイム同期（Firebaseからデータを受信）
+  // ==========================================
+  useEffect(() => {
+    // データベースの "practices" コレクションを監視
+    const unsubscribe = onSnapshot(collection(db, "practices"), (snapshot) => {
+      const practicesData = snapshot.docs.map((doc) => doc.data());
+
+      // 日付が新しい順に並び替え
+      practicesData.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setPractices(practicesData);
+
+      // 初回ロード時などにIDが未設定なら、一番新しい練習日を選択
+      if (practicesData.length > 0 && !selectedPracticeId) {
+        setSelectedPracticeId(practicesData[0].id);
+      }
+    });
+
+    return () => unsubscribe(); // コンポーネント破棄時に監視を解除
+  }, [selectedPracticeId]);
+
   const currentPractice =
     practices.find((p) => p.id === selectedPracticeId) || null;
 
+  // ==========================================
+  // 🔥 2. 各種操作（Firebaseへデータを送信）
+  // ==========================================
+
   // 新しい練習日の追加
-  const addPractice = (dateStr) => {
+  const addPractice = async (dateStr) => {
     if (!dateStr) return;
     const newId = "p_" + Date.now();
     const newPractice = {
@@ -47,75 +63,69 @@ export default function App() {
       teams: [],
       teamsGenerated: false,
     };
-    setPractices([...practices, newPractice]);
-    setSelectedPracticeId(newId); // 追加した日を自動で選択
+
+    // Firestoreに直接保存！
+    await setDoc(doc(db, "practices", newId), newPractice);
+    setSelectedPracticeId(newId);
   };
 
   // 出席の切り替え
-  const toggleAttend = (memberId) => {
-    setPractices((prev) =>
-      prev.map((p) => {
-        if (p.id !== selectedPracticeId) return p;
-        return {
-          ...p,
-          teamsGenerated: false,
-          teams: [],
-          attendance: p.attendance.map((m) =>
-            m.id === memberId
-              ? {
-                  ...m,
-                  attending: !m.attending,
-                  arrived: m.attending ? false : m.arrived,
-                }
-              : m,
-          ),
-        };
-      }),
+  const toggleAttend = async (memberId) => {
+    if (!currentPractice) return;
+    const updatedAttendance = currentPractice.attendance.map((m) =>
+      m.id === memberId
+        ? {
+            ...m,
+            attending: !m.attending,
+            arrived: m.attending ? false : m.arrived,
+          }
+        : m,
     );
+
+    // Firestoreのデータを上書き！
+    await setDoc(doc(db, "practices", currentPractice.id), {
+      ...currentPractice,
+      teamsGenerated: false,
+      teams: [],
+      attendance: updatedAttendance,
+    });
   };
 
   // 到着の切り替え
-  const toggleArrived = (memberId) => {
-    setPractices((prev) =>
-      prev.map((p) => {
-        if (p.id !== selectedPracticeId) return p;
-        return {
-          ...p,
-          attendance: p.attendance.map((m) => {
-            if (m.id !== memberId) return m;
-            if (!m.attending) return m; // 出席してないと到着できない
-            return { ...m, arrived: !m.arrived };
-          }),
-        };
-      }),
-    );
+  const toggleArrived = async (memberId) => {
+    if (!currentPractice) return;
+    const updatedAttendance = currentPractice.attendance.map((m) => {
+      if (m.id !== memberId) return m;
+      if (!m.attending) return m; // 出席してないと到着できない
+      return { ...m, arrived: !m.arrived };
+    });
+
+    // Firestoreのデータを上書き！
+    await setDoc(doc(db, "practices", currentPractice.id), {
+      ...currentPractice,
+      attendance: updatedAttendance,
+    });
   };
 
   // チーム振り分け
-  const generateTeams = (numTeams) => {
+  const generateTeams = async (numTeams) => {
     if (!currentPractice) return;
     const present = currentPractice.attendance.filter((m) => m.arrived);
     if (present.length < numTeams) return;
 
     const result = distributeTeams(present, numTeams);
+    const updatedAttendance = currentPractice.attendance.map((m) => {
+      const found = result.find((t) => t.members.some((tm) => tm.id === m.id));
+      return { ...m, team: found ? found.id : null };
+    });
 
-    setPractices((prev) =>
-      prev.map((p) => {
-        if (p.id !== selectedPracticeId) return p;
-        const updatedAttendance = p.attendance.map((m) => {
-          const found = result.find((t) =>
-            t.members.some((tm) => tm.id === m.id),
-          );
-          return { ...m, team: found ? found.id : null };
-        });
-        return {
-          ...p,
-          attendance: updatedAttendance,
-          teams: result,
-          teamsGenerated: true,
-        };
-      }),
-    );
+    // Firestoreのデータを上書き！
+    await setDoc(doc(db, "practices", currentPractice.id), {
+      ...currentPractice,
+      attendance: updatedAttendance,
+      teams: result,
+      teamsGenerated: true,
+    });
   };
 
   return (
