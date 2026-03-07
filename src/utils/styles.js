@@ -55,7 +55,7 @@ const styles = {
   },
   page: {},
   heroSection: {
-    padding: "28px 0 20px",
+    padding: "5px 0 20px",
   },
   heroTitle: {
     fontSize: 30,
@@ -181,14 +181,38 @@ const styles = {
   },
   personalView: {},
   backBtn: {
-    background: "none",
-    border: "none",
-    color: "#888",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    background: "#fff",
+    border: "1px solid #e8e8e8",
+    borderRadius: 10,
+    color: "#555",
     cursor: "pointer",
-    fontSize: 13,
-    marginBottom: 16,
-    padding: 0,
+    fontSize: 14,
+    fontWeight: 600,
+    padding: "10px 16px",
+    marginBottom: 20,
+    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+    transition: "all 0.2s ease",
   },
+  backBtnIcon: {
+    fontSize: 16,
+    lineHeight: 1,
+    opacity: 0.9,
+  },
+  /** 戻るボタンの hover/active 用 CSS（className="back-btn" に注入する想定） */
+  backBtnHoverCSS: `
+    .back-btn:hover {
+      background: #f8f8f8;
+      border-color: #ddd;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .back-btn:active {
+      transform: scale(0.95);
+    }
+  `,
+
   personalCard: {
     background: "#fff",
     borderRadius: 16,

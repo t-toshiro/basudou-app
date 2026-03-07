@@ -30,31 +30,23 @@ export default function AttendancePage({
 
   return (
     <div style={styles.page}>
+      <style dangerouslySetInnerHTML={{ __html: styles.backBtnHoverCSS }} />
+      <button
+        className="back-btn"
+        style={styles.backBtn}
+        onClick={() => setHomeStep("selectDate")}
+        type="button"
+      >
+        <span style={styles.backBtnIcon}>←</span>
+        戻る
+      </button>
       <div style={styles.heroSection}>
         <h1 style={styles.heroTitle}>
           今日の練習、
           <br />
           準備はいい？
         </h1>
-      </div>
-
-      {/* 練習日表示・変更 */}
-      <div style={styles.practiceSelectRow}>
-        <span style={{ fontWeight: "bold" }}>📅 対象の練習日:</span>
-        <span style={{ flex: 1, fontSize: 15, fontWeight: 700 }}>
-          {currentPractice.date}
-        </span>
-        <button
-          style={{
-            ...styles.smBtn,
-            background: "#f0f0f0",
-            color: "#555",
-            padding: "8px 14px",
-          }}
-          onClick={() => setHomeStep("selectDate")}
-        >
-          練習日を変更
-        </button>
+        <p style={styles.heroSub}>📅 {currentPractice.date}</p>
       </div>
 
       <div style={styles.statsRow}>
