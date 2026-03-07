@@ -48,3 +48,37 @@ export function distributeTeams(presentMembers, numTeams) {
 
   return teams;
 }
+
+/** 2コート用：全チームの試合組み合わせを過不足なくラウンド分けする（1ラウンド最大2試合＝4チーム） */
+export function getMatchSchedule(teams, courts = 2) {
+  if (!teams || teams.length < 2) return [];
+
+  const pairs = [];
+  for (let i = 0; i < teams.length; i++) {
+    for (let j = i + 1; j < teams.length; j++) {
+      pairs.push([teams[i], teams[j]]);
+    }
+  }
+
+  const rounds = [];
+  const used = new Set();
+
+  while (used.size < pairs.length) {
+    const round = [];
+    const teamsInRound = new Set();
+
+    for (let i = 0; i < pairs.length; i++) {
+      if (used.has(i)) continue;
+      const [a, b] = pairs[i];
+      if (teamsInRound.has(a.id) || teamsInRound.has(b.id)) continue;
+      round.push([a, b]);
+      teamsInRound.add(a.id);
+      teamsInRound.add(b.id);
+      used.add(i);
+      if (round.length >= courts) break;
+    }
+    rounds.push(round);
+  }
+
+  return rounds;
+}
