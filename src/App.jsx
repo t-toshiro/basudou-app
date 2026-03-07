@@ -2,11 +2,13 @@ import { useState } from "react";
 import styles from "./utils/styles";
 import { ROSTER, distributeTeams } from "./utils/data";
 import Header from "./components/Header";
-import HomeView from "./components/HomeView";
+import PracticeSelectPage from "./components/PracticeSelectPage";
+import AttendancePage from "./components/AttendancePage";
 import AdminView from "./components/AdminView";
 
 export default function App() {
   const [view, setView] = useState("home"); // home | admin
+  const [homeStep, setHomeStep] = useState("selectDate"); // selectDate | attendance
 
   // 練習日のデータリスト（初期状態として1日分を入れておく）
   const [practices, setPractices] = useState([
@@ -120,11 +122,17 @@ export default function App() {
     <div style={styles.root}>
       <Header view={view} setView={setView} />
       <main style={styles.main}>
-        {view === "home" && (
-          <HomeView
+        {view === "home" && homeStep === "selectDate" && (
+          <PracticeSelectPage
             practices={practices}
-            currentPractice={currentPractice}
             setSelectedPracticeId={setSelectedPracticeId}
+            setHomeStep={setHomeStep}
+          />
+        )}
+        {view === "home" && homeStep === "attendance" && (
+          <AttendancePage
+            currentPractice={currentPractice}
+            setHomeStep={setHomeStep}
             toggleAttend={toggleAttend}
             toggleArrived={toggleArrived}
           />
