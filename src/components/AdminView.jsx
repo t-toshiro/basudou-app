@@ -7,6 +7,7 @@ export default function AdminView({
   currentPractice,
   setSelectedPracticeId,
   addPractice,
+  deletePractice,
   generateTeams,
 }) {
   const [newDate, setNewDate] = useState("");
@@ -60,17 +61,31 @@ export default function AdminView({
             <div style={{ fontWeight: "bold", marginBottom: "8px" }}>
               管理する練習日を選択
             </div>
-            <select
-              style={styles.selectBox}
-              value={currentPractice ? currentPractice.id : ""}
-              onChange={(e) => setSelectedPracticeId(e.target.value)}
-            >
-              {practices.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.date} の練習データ
-                </option>
-              ))}
-            </select>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <select
+                style={styles.selectBox}
+                value={currentPractice ? currentPractice.id : ""}
+                onChange={(e) => setSelectedPracticeId(e.target.value)}
+              >
+                {practices.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.date} の練習データ
+                  </option>
+                ))}
+              </select>
+              <button
+                style={{
+                  ...styles.smBtn,
+                  background: "#FF4757",
+                  color: "#fff",
+                  padding: "0 12px",
+                }}
+                onClick={() => deletePractice(currentPractice?.id)}
+                disabled={!currentPractice}
+              >
+                🗑 削除
+              </button>
+            </div>
           </>
         )}
       </div>

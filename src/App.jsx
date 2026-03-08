@@ -11,7 +11,13 @@ import SlideTransition from "./components/SlideTransition";
 
 // 🔥 Firebase用のインポートを追加
 import { db } from "./utils/firebase";
-import { collection, doc, setDoc, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  setDoc,
+  onSnapshot,
+  deleteDoc,
+} from "firebase/firestore";
 
 export default function App() {
   const [view, setView] = useState("home"); // home | admin
@@ -108,6 +114,23 @@ export default function App() {
     setSelectedPracticeId(newId);
   };
 
+  // 練習日の削除
+  const deletePractice = async (practiceId) => {
+    if (!practiceId) return;
+    if (!window.confirm("この練習日データを完全に削除しますか？")) return;
+
+    try {
+      await deleteDoc(doc(db, "practices", practiceId));
+      // 削除後、選択されているIDをリセットして、useEffectでの自動選択に任せる
+      if (selectedPracticeId === practiceId) {
+        setSelectedPracticeId("");
+      }
+    } catch (error) {
+      console.error("Error deleting practice: ", error);
+      alert("削除に失敗しました。");
+    }
+  };
+
   // 出席の切り替え
   const toggleAttend = async (memberId) => {
     if (!currentPractice) return;
@@ -193,10 +216,7 @@ export default function App() {
           )}
           </SlideTransition>
           {view === "admin" && !adminUnlocked && (
-            <AdminPasswordGate
-              onSuccess={() => setAdminUnlocked(true)}
-              onCancel={() => handleSetView("home")}
-            />
+          <AdminPasswordGate onSuccess={() => setAdminUnlocked(true)} />
           )}
           {view === "admin" && adminUnlocked && (
             <AdminView
