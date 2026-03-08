@@ -7,6 +7,7 @@ import PracticeSelectPage from "./components/PracticeSelectPage";
 import AttendancePage from "./components/AttendancePage";
 import AdminView from "./components/AdminView";
 import AdminPasswordGate from "./components/AdminPasswordGate";
+import SlideTransition from "./components/SlideTransition";
 
 // 🔥 Firebase用のインポートを追加
 import { db } from "./utils/firebase";
@@ -22,11 +23,42 @@ export default function App() {
   const [view, setView] = useState("home"); // home | admin
   const [adminUnlocked, setAdminUnlocked] = useState(false); // 管理者パスワード通過済みか
   const [homeStep, setHomeStep] = useState("selectDate"); // selectDate | attendance
+  const [slideDirection, setSlideDirection] = useState(1); // 1=右から, -1=左から
+  const [isFirstRender, setIsFirstRender] = useState(true);
+
+  // 初回表示ではスライドアニメーションをスキップ
+  useEffect(() => {
+    setIsFirstRender(false);
+  }, []);
 
   // 管理者画面からホームに戻ったらロックを解除
   useEffect(() => {
     if (view !== "admin") setAdminUnlocked(false);
   }, [view]);
+
+  // 画面遷移の状態管理と、画面ごとの一意なキー作成処理
+  // - pageKey: 現在の画面(view)やサブステップ(homeStep, adminUnlocked)によって
+  //   Reactコンポーネント用の一意なキーを生成。スライドアニメーションの適用のためにも用いる。
+  //   "home"の時はhomeStepごと、"admin"の時はパスワード通過済みかどうかで値が変わる。
+  const pageKey =
+    view === "home"
+      ? `home-${homeStep}`
+      : `admin-${adminUnlocked ? "view" : "gate"}`;
+
+  // 画面(view)を切り替える時に呼ぶ関数。
+  // - 次の画面が"admin"なら右からスライド、"home"に戻る時は左からスライドするよう
+  //   direction（アニメーション方向）も管理している。
+  const handleSetView = (nextView) => {
+    setSlideDirection(nextView === "admin" ? 1 : -1);
+    setView(nextView);
+  };
+
+  // "home"画面内でのsub-step（selectDate⇄attendance）切替用ハンドラ。
+  // - 次が"attendance"画面なら右、"selectDate"なら左からスライド
+  const handleSetHomeStep = (nextStep) => {
+    setSlideDirection(nextStep === "attendance" ? 1 : -1);
+    setHomeStep(nextStep);
+  };
 
   // 🔥 初期値を空配列にし、Firebaseから取得するように変更
   const [practices, setPractices] = useState([]);
@@ -160,36 +192,41 @@ export default function App() {
 
   return (
     <div style={styles.root}>
-      <Header view={view} setView={setView} />
-      <main style={styles.main}>
-        {view === "home" && homeStep === "selectDate" && (
-          <PracticeSelectPage
-            practices={practices}
-            setSelectedPracticeId={setSelectedPracticeId}
-            setHomeStep={setHomeStep}
-          />
-        )}
-        {view === "home" && homeStep === "attendance" && (
-          <AttendancePage
-            currentPractice={currentPractice}
-            setHomeStep={setHomeStep}
-            toggleAttend={toggleAttend}
-            toggleArrived={toggleArrived}
-          />
-        )}
-        {view === "admin" && !adminUnlocked && (
+      <Header view={view} setView={handleSetView} />
+      <main style={{ ...styles.main, overflow: "hidden" }}>
+        <SlideTransition
+          key={pageKey}
+          direction={slideDirection}
+          animate={!isFirstRender}
+        >
+          {view === "home" && homeStep === "selectDate" && (
+            <PracticeSelectPage
+              practices={practices}
+              setSelectedPracticeId={setSelectedPracticeId}
+              setHomeStep={handleSetHomeStep}
+            />
+          )}
+          {view === "home" && homeStep === "attendance" && (
+            <AttendancePage
+              currentPractice={currentPractice}
+              setHomeStep={handleSetHomeStep}
+              toggleAttend={toggleAttend}
+              toggleArrived={toggleArrived}
+            />
+          )}
+          </SlideTransition>
+          {view === "admin" && !adminUnlocked && (
           <AdminPasswordGate onSuccess={() => setAdminUnlocked(true)} />
-        )}
-        {view === "admin" && adminUnlocked && (
-          <AdminView
-            practices={practices}
-            currentPractice={currentPractice}
-            setSelectedPracticeId={setSelectedPracticeId}
-            addPractice={addPractice}
-            deletePractice={deletePractice}
-            generateTeams={generateTeams}
-          />
-        )}
+          )}
+          {view === "admin" && adminUnlocked && (
+            <AdminView
+              practices={practices}
+              currentPractice={currentPractice}
+              setSelectedPracticeId={setSelectedPracticeId}
+              addPractice={addPractice}
+              generateTeams={generateTeams}
+            />
+          )}
       </main>
     </div>
   );
