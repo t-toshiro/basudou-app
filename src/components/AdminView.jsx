@@ -98,17 +98,19 @@ export default function AdminView({
               <label style={styles.teamLabel}>チーム数</label>
               <div style={styles.teamCounter}>
                 <button
+                  className="counter-btn"
                   style={styles.counterBtn}
                   onClick={() => setNumTeams(Math.max(2, numTeams - 1))}
                 >
-                  −
+                  <span className="counter-btn-char">−</span>
                 </button>
                 <span style={styles.counterNum}>{numTeams}</span>
                 <button
+                  className="counter-btn"
                   style={styles.counterBtn}
                   onClick={() => setNumTeams(Math.min(8, numTeams + 1))}
                 >
-                  ＋
+                  <span className="counter-btn-char">＋</span>
                 </button>
               </div>
             </div>
