@@ -302,10 +302,9 @@ const styles = {
   teamCounter: {
     display: "flex",
     alignItems: "center",
-    gap: 12,
+    gap: 1,
     background: "#f5f5f5",
     borderRadius: 10,
-    padding: "6px 12px",
   },
   counterBtn: {
     background: "none",
@@ -315,7 +314,13 @@ const styles = {
     cursor: "pointer",
     color: "#555",
     lineHeight: 1,
-    padding: "0 4px",
+    padding: "12px 20px",
+    borderRadius: 8,
+    minHeight: 44,
+    minWidth: 44,
+    transition: "transform 0.12s ease, background 0.12s ease",
+    touchAction: "manipulation",
+    WebkitTapHighlightColor: "transparent",
   },
   counterNum: {
     fontSize: 20,

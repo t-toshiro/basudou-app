@@ -11,3 +11,25 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* 全ボタン: 押した時に少し大きくなる */
+button {
+  transition: transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+button:active {
+  transform: scale(1.05);
+}
+
+/* チーム数 +/- : ボタン全体は拡大せず、文字だけ押したように下に動く */
+.counter-btn:active {
+  transform: none;
+}
+.counter-btn-char {
+  display: inline-block;
+  transition: transform 0.12s ease;
+}
+.counter-btn:active .counter-btn-char {
+  transform: translateY(2px);
+}
