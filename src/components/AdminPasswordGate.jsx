@@ -43,7 +43,7 @@ export default function AdminPasswordGate({ onSuccess, onCancel }) {
         style={{
           background: "#fff",
           borderRadius: 14,
-          padding: "32px 24px",
+          padding: "26px 24px",
           maxWidth: 360,
           margin: "40px auto 0",
           boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
@@ -81,7 +81,7 @@ export default function AdminPasswordGate({ onSuccess, onCancel }) {
             autoFocus
             style={{
               width: "100%",
-              padding: "12px 14px",
+              padding: "12px 10px",
               fontSize: 15,
               border: `2px solid ${error ? "#FF4757" : "#e0e0e0"}`,
               borderRadius: 10,
@@ -107,7 +107,8 @@ export default function AdminPasswordGate({ onSuccess, onCancel }) {
                 ...styles.smBtn,
                 display: "block", 
                 margin: "0 auto",
-                width: "50%",
+                width: "100%",
+                height: "2.5vw",
                 background: "#FF4757",
                 color: "#fff",
               }}
