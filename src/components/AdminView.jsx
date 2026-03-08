@@ -235,7 +235,7 @@ export default function AdminView({
                         letterSpacing: "0.05em",
                       }}
                     >
-                      ラウンド {roundIdx + 1}
+                      {roundIdx + 1}試合目
                     </div>
                     <div
                       style={{

@@ -45,6 +45,7 @@ export default function AdminPasswordGate({ onSuccess, onCancel }) {
           borderRadius: 14,
           padding: "26px 24px",
           maxWidth: 360,
+          minHeight: 160,
           margin: "40px auto 0",
           boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
         }}
@@ -108,7 +109,7 @@ export default function AdminPasswordGate({ onSuccess, onCancel }) {
                 display: "block", 
                 margin: "0 auto",
                 width: "100%",
-                height: "2.5vw",
+                height: "100%",
                 background: "#FF4757",
                 color: "#fff",
               }}
