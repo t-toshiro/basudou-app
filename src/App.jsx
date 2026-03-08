@@ -20,6 +20,7 @@ import {
 } from "firebase/firestore";
 
 export default function App() {
+  const [isLoading, setIsLoading] = useState(true);
   const [view, setView] = useState("home"); // home | admin
   const [adminUnlocked, setAdminUnlocked] = useState(false); // 管理者パスワード通過済みか
   const [homeStep, setHomeStep] = useState("selectDate"); // selectDate | attendance
@@ -68,21 +69,21 @@ export default function App() {
   // 🔥 1. リアルタイム同期（Firebaseからデータを受信）
   // ==========================================
   useEffect(() => {
-    // データベースの "practices" コレクションを監視
     const unsubscribe = onSnapshot(collection(db, "practices"), (snapshot) => {
       const practicesData = snapshot.docs.map((doc) => doc.data());
 
-      // 日付が新しい順に並び替え
       practicesData.sort((a, b) => new Date(b.date) - new Date(a.date));
       setPractices(practicesData);
 
-      // 初回ロード時などにIDが未設定なら、一番新しい練習日を選択
       if (practicesData.length > 0 && !selectedPracticeId) {
         setSelectedPracticeId(practicesData[0].id);
       }
+
+      // 🔥 データの取得が終わったのでローディング画面をオフにする！
+      setIsLoading(false);
     });
 
-    return () => unsubscribe(); // コンポーネント破棄時に監視を解除
+    return () => unsubscribe();
   }, [selectedPracticeId]);
 
   const currentPractice =
@@ -201,39 +202,61 @@ export default function App() {
     <div style={styles.root}>
       <Header view={view} setView={handleSetView} />
       <main style={{ ...styles.main, overflow: "hidden" }}>
-        <SlideTransition
-          key={pageKey}
-          direction={slideDirection}
-          animate={!isFirstRender}
-        >
-          {view === "home" && homeStep === "selectDate" && (
-            <PracticeSelectPage
-              practices={practices}
-              setSelectedPracticeId={setSelectedPracticeId}
-              setHomeStep={handleSetHomeStep}
-            />
-          )}
-          {view === "home" && homeStep === "attendance" && (
-            <AttendancePage
-              currentPractice={currentPractice}
-              setHomeStep={handleSetHomeStep}
-              toggleAttend={toggleAttend}
-              toggleArrived={toggleArrived}
-            />
-          )}
-        </SlideTransition>
-        {view === "admin" && !adminUnlocked && (
-          <AdminPasswordGate onSuccess={() => setAdminUnlocked(true)} />
-        )}
-        {view === "admin" && adminUnlocked && (
-          <AdminView
-            practices={practices}
-            currentPractice={currentPractice}
-            setSelectedPracticeId={setSelectedPracticeId}
-            addPractice={addPractice}
-            deletePractice={deletePractice}
-            generateTeams={generateTeams}
-          />
+        {/* 🔥 ローディング中の表示 */}
+        {isLoading ? (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "60vh",
+              color: "#666",
+            }}
+          >
+            <div style={{ fontSize: "48px", marginBottom: "16px" }}>🏀</div>
+            <h2 style={{ fontSize: "18px", fontWeight: "bold" }}>
+              読み込み中...
+            </h2>
+          </div>
+        ) : (
+          /* 🔥 読み込み完了後（既存のコードをそのまま括る） */
+          <>
+            <SlideTransition
+              key={pageKey}
+              direction={slideDirection}
+              animate={!isFirstRender}
+            >
+              {view === "home" && homeStep === "selectDate" && (
+                <PracticeSelectPage
+                  practices={practices}
+                  setSelectedPracticeId={setSelectedPracticeId}
+                  setHomeStep={handleSetHomeStep}
+                />
+              )}
+              {view === "home" && homeStep === "attendance" && (
+                <AttendancePage
+                  currentPractice={currentPractice}
+                  setHomeStep={handleSetHomeStep}
+                  toggleAttend={toggleAttend}
+                  toggleArrived={toggleArrived}
+                />
+              )}
+            </SlideTransition>
+            {view === "admin" && !adminUnlocked && (
+              <AdminPasswordGate onSuccess={() => setAdminUnlocked(true)} />
+            )}
+            {view === "admin" && adminUnlocked && (
+              <AdminView
+                practices={practices}
+                currentPractice={currentPractice}
+                setSelectedPracticeId={setSelectedPracticeId}
+                addPractice={addPractice}
+                deletePractice={deletePractice}
+                generateTeams={generateTeams}
+              />
+            )}
+          </>
         )}
       </main>
     </div>
