@@ -47,6 +47,80 @@ export default function AttendancePage({
           準備はいい？
         </h1>
         <p style={styles.heroSub}>📅 {currentPractice.date}</p>
+        {/* 試合組み合わせ（簡略表示） */}
+        {currentPractice.teamsGenerated &&
+        currentPractice.matchSchedule?.length > 0 &&
+        currentPractice.teams?.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <div style={styles.sectionTitle}>🏀 試合組み合わせ</div>
+            <div
+              style={{
+                background: "#fff",
+                borderRadius: 12,
+                padding: 8,
+                boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "flex-start",
+                gap: 0,
+              }}
+            >
+              {(currentPractice.matchSchedule ?? []).map((round, roundIdx) => (
+                <div
+                  key={roundIdx}
+                  style={{
+                    flex: "0 1 140px",
+                    minWidth: 140,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#888",
+                      marginBottom: 3,
+                    }}
+                  >
+                    {roundIdx + 1} 試合目
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+                    {(round.matches ?? []).map((m, matchIdx) => {
+                      const t1 = currentPractice.teams.find((t) => t.id === m.team1Id);
+                      const t2 = currentPractice.teams.find((t) => t.id === m.team2Id);
+                      return (
+                        <div
+                          key={matchIdx}
+                          style={{
+                            gap: 3,
+                            background: "#f8f9fa",
+                            borderRadius: 8,
+                            padding: "8px 12px",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            marginBottom: 6,
+                          }}
+                        >
+                        <div>
+                          <span style={{ color: t1?.color?.bg ?? "#333" }}>
+                            {t1?.color?.name ?? "—"}
+                          </span>
+                          <span style={{ color: "#999", fontSize: 11 }}>vs</span>
+                          <span style={{ color: t2?.color?.bg ?? "#333" }}>
+                            {t2?.color?.name ?? "—"}
+                          </span>
+                        </div>
+                          <div style={{ fontSize: 10, color: "#aaa" }}>
+                            コート{matchIdx + 1}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={styles.statsRow}>
