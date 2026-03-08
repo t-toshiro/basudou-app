@@ -1,27 +1,40 @@
 import { useState } from "react";
 import styles from "../utils/styles";
-
-// 環境変数 REACT_APP_ADMIN_PASSWORD が未設定の場合は開発用のデフォルト（本番では必ず .env で設定すること）
-const EXPECTED_PASSWORD = 
-  process.env.REACT_APP_ADMIN_PASSWORD || "admin";
+import { db } from "../utils/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function AdminPasswordGate({ onSuccess, onCancel }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isChecking, setIsChecking] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     if (password.trim() === "") {
       setError("パスワードを入力してください");
       return;
     }
-    if (password !== EXPECTED_PASSWORD) {
-      setError("パスワードが正しくありません");
+
+    setIsChecking(true);
+    try {
+      // 入力値をドキュメントIDとして admin_keys コレクションを参照
+      const docRef = doc(db, "admin_keys", password.trim());
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        onSuccess();
+        setPassword("");
+      } else {
+        setError("パスワードが違います");
+        setPassword("");
+      }
+    } catch (err) {
+      setError("パスワードが違います（または通信エラー）");
       setPassword("");
-      return;
+    } finally {
+      setIsChecking(false);
     }
-    onSuccess();
   };
 
   return (
@@ -49,13 +62,14 @@ export default function AdminPasswordGate({ onSuccess, onCancel }) {
           style={{
             fontSize: 13,
             color: "#666",
-            marginBottom: 20,
+            marginBottom: 15,
             textAlign: "center",
           }}
         >
           管理者画面を開くにはパスワードを入力してください。
         </p>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} >
+          
           <input
             type="password"
             value={password}
@@ -77,28 +91,28 @@ export default function AdminPasswordGate({ onSuccess, onCancel }) {
             }}
           />
           {error && (
-            <p
+            <div
               style={{
                 fontSize: 12,
                 color: "#FF4757",
-                marginBottom: 12,
+                marginBottom: 8,
               }}
             >
               {error}
-            </p>
+            </div>
           )}
             <button
               type="submit"
               style={{
                 ...styles.smBtn,
-                textAlign: "center",
-                width: "100%",
-                flex: 1,
+                display: "block", 
+                margin: "0 auto",
+                width: "50%",
                 background: "#FF4757",
                 color: "#fff",
               }}
             >
-              開く
+              {isChecking ? "確認中…" : "開く"}
             </button>
         </form>
       </div>
