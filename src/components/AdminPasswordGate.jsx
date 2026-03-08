@@ -74,6 +74,7 @@ export default function AdminPasswordGate({ onSuccess, onCancel }) {
           <input
             type="password"
             value={password}
+            inputmode="numeric"
             onChange={(e) => {
               setPassword(e.target.value);
               setError("");
