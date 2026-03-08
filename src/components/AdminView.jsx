@@ -106,7 +106,7 @@ export default function AdminView({
                 <span style={styles.counterNum}>{numTeams}</span>
                 <button
                   style={styles.counterBtn}
-                  onClick={() => setNumTeams(Math.min(6, numTeams + 1))}
+                  onClick={() => setNumTeams(Math.min(8, numTeams + 1))}
                 >
                   ＋
                 </button>

@@ -302,10 +302,9 @@ const styles = {
   teamCounter: {
     display: "flex",
     alignItems: "center",
-    gap: 12,
+    gap: 1,
     background: "#f5f5f5",
     borderRadius: 10,
-    padding: "6px 12px",
   },
   counterBtn: {
     background: "none",
@@ -315,7 +314,9 @@ const styles = {
     cursor: "pointer",
     color: "#555",
     lineHeight: 1,
-    padding: "0 4px",
+    padding: "8px 16px",
+    borderRadius: 6,
+    transition: "background 0.15s, transform 0.15s",
   },
   counterNum: {
     fontSize: 20,
