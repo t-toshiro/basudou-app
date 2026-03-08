@@ -128,6 +128,30 @@ export default function App() {
     });
   };
 
+  // 🔑 サーバーに「この名前の鍵穴はあるか？」だけを確認しに行く
+  const handleAdminLogin = async () => {
+    if (!passInput) return;
+
+    try {
+      // ユーザーが入力したパスワードをそのままドキュメントIDとして指定
+      const docRef = doc(db, "admin_keys", passInput);
+      const docSnap = await getDoc(docRef);
+
+      // 存在していれば、パスワード一致！（サーバー側で照合が完了した証拠）
+      if (docSnap.exists()) {
+        setIsAdminAuth(true);
+        setPassInput("");
+      } else {
+        alert("パスコードが違います！");
+        setPassInput("");
+      }
+    } catch (error) {
+      // ルールで弾かれた場合などもここに来ます
+      alert("パスコードが違います！（または通信エラー）");
+      setPassInput("");
+    }
+  };
+
   return (
     <div style={styles.root}>
       <Header view={view} setView={setView} />
