@@ -13,6 +13,40 @@ export default function AdminView({
   const [newDate, setNewDate] = useState("");
   const [numTeams, setNumTeams] = useState(2);
 
+  const handleShareLine = () => {
+    if (!currentPractice || !currentPractice.teamsGenerated) return;
+
+    let text = `🏀【${currentPractice.date} チーム分け結果】\n\n`;
+    
+    // チームリスト
+    currentPractice.teams.forEach((team) => {
+      text += `■${team.color.name}チーム\n`;
+      team.members.forEach((m) => {
+        const pos = m.position === "front" ? "F" : "B";
+        text += `・${m.name} (${pos})\n`;
+      });
+      text += "\n";
+    });
+
+    // 試合スケジュール
+    if (displaySchedule.length > 0) {
+      text += `━━━━━━━━━━━━━━\n`;
+      text += `🏆 試合組み合わせ（2コート）\n\n`;
+      displaySchedule.forEach((round, roundIdx) => {
+        text += `【ラウンド ${roundIdx + 1}】\n`;
+        round.forEach((match, matchIdx) => {
+          const t1 = match[0]?.color?.name ?? "—";
+          const t2 = match[1]?.color?.name ?? "—";
+          text += `C${matchIdx + 1}: ${t1} vs ${t2}\n`;
+        });
+        text += "\n";
+      });
+    }
+
+    const url = `https://line.me/R/msg/text/?${encodeURIComponent(text)}`;
+    window.open(url, "_blank");
+  };
+
   // currentPracticeがない時（データが0件の時）にエラーにならないよう安全に計算
   const attendingCount = currentPractice
     ? currentPractice.attendance.filter((m) => m.attending).length
@@ -202,6 +236,14 @@ export default function AdminView({
                     </div>
                   ))}
                 </div>
+                <button style={styles.lineBtn} onClick={handleShareLine}>
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg"
+                    alt="LINE"
+                    style={{ width: 24, height: 24 }}
+                  />
+                  LINEで結果を共有
+                </button>
               </div>
             )}
 

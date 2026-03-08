@@ -414,6 +414,25 @@ const styles = {
     padding: "10px 14px",
     borderBottom: "1px solid #f0f0f0",
   },
+  lineBtn: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    width: "100%",
+    background: "#06C755",
+    color: "#fff",
+    border: "none",
+    borderRadius: 12,
+    padding: "12px",
+    fontSize: 15,
+    fontWeight: 700,
+    cursor: "pointer",
+    marginTop: 16,
+    textDecoration: "none",
+    boxShadow: "0 2px 8px rgba(6,199,85,0.25)",
+    transition: "all 0.2s",
+  },
 
   // ===== 練習日の選択UI用に追加したスタイル =====
   practiceSelectRow: {
