@@ -6,6 +6,7 @@ import Header from "./components/Header";
 import PracticeSelectPage from "./components/PracticeSelectPage";
 import AttendancePage from "./components/AttendancePage";
 import AdminView from "./components/AdminView";
+import AdminPasswordGate from "./components/AdminPasswordGate";
 
 // 🔥 Firebase用のインポートを追加
 import { db } from "./utils/firebase";
@@ -13,7 +14,13 @@ import { collection, doc, setDoc, onSnapshot } from "firebase/firestore";
 
 export default function App() {
   const [view, setView] = useState("home"); // home | admin
+  const [adminUnlocked, setAdminUnlocked] = useState(false); // 管理者パスワード通過済みか
   const [homeStep, setHomeStep] = useState("selectDate"); // selectDate | attendance
+
+  // 管理者画面からホームに戻ったらロックを解除
+  useEffect(() => {
+    if (view !== "admin") setAdminUnlocked(false);
+  }, [view]);
 
   // 🔥 初期値を空配列にし、Firebaseから取得するように変更
   const [practices, setPractices] = useState([]);
@@ -147,7 +154,12 @@ export default function App() {
             toggleArrived={toggleArrived}
           />
         )}
-        {view === "admin" && (
+        {view === "admin" && !adminUnlocked && (
+          <AdminPasswordGate
+            onSuccess={() => setAdminUnlocked(true)}
+          />
+        )}
+        {view === "admin" && adminUnlocked && (
           <AdminView
             practices={practices}
             currentPractice={currentPractice}
