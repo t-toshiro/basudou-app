@@ -1,1 +1,1 @@
-URL: basudou-app.vercel.app
+URL: https://basudou-app.vercel.app/
