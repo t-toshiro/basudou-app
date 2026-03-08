@@ -214,19 +214,20 @@ export default function App() {
               toggleArrived={toggleArrived}
             />
           )}
-          </SlideTransition>
-          {view === "admin" && !adminUnlocked && (
+        </SlideTransition>
+        {view === "admin" && !adminUnlocked && (
           <AdminPasswordGate onSuccess={() => setAdminUnlocked(true)} />
-          )}
-          {view === "admin" && adminUnlocked && (
-            <AdminView
-              practices={practices}
-              currentPractice={currentPractice}
-              setSelectedPracticeId={setSelectedPracticeId}
-              addPractice={addPractice}
-              generateTeams={generateTeams}
-            />
-          )}
+        )}
+        {view === "admin" && adminUnlocked && (
+          <AdminView
+            practices={practices}
+            currentPractice={currentPractice}
+            setSelectedPracticeId={setSelectedPracticeId}
+            addPractice={addPractice}
+            deletePractice={deletePractice}
+            generateTeams={generateTeams}
+          />
+        )}
       </main>
     </div>
   );
