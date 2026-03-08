@@ -21,6 +21,15 @@ export default function AdminView({
     ? currentPractice.attendance.filter((m) => m.arrived).length
     : 0;
 
+  // Firestore保存形式 { matches: [{ team1Id, team2Id }, ...] } を表示用 [team1, team2] に復元
+  const rawSchedule = currentPractice?.matchSchedule ?? [];
+  const displaySchedule = rawSchedule.map((round) =>
+    (round.matches ?? []).map((m) => [
+      currentPractice?.teams?.find((t) => t.id === m.team1Id),
+      currentPractice?.teams?.find((t) => t.id === m.team2Id),
+    ])
+  );
+
   return (
     <div style={styles.page}>
       <div style={styles.sectionTitle}>⚙️ 管理者パネル</div>
@@ -195,6 +204,113 @@ export default function AdminView({
                 </div>
               </div>
             )}
+
+          {/* 試合組み合わせ（2コート）— getMatchSchedule の結果を表示 */}
+          {displaySchedule.length > 0 && currentPractice?.teams?.length > 0 && (
+            <div>
+              <div style={{ ...styles.sectionTitle, marginTop: 24 }}>
+                試合組み合わせ（2コート）
+              </div>
+              <div style={styles.adminCard}>
+                {displaySchedule.map((round, roundIdx) => (
+                  <div
+                    key={roundIdx}
+                    style={{
+                      marginBottom:
+                        roundIdx < displaySchedule.length - 1 ? 16 : 0,
+                      paddingBottom:
+                        roundIdx < displaySchedule.length - 1 ? 16 : 0,
+                      borderBottom:
+                        roundIdx < displaySchedule.length - 1
+                          ? "1px solid #eee"
+                          : "none",
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "#888",
+                        marginBottom: 8,
+                        letterSpacing: "0.05em",
+                      }}
+                    >
+                      ラウンド {roundIdx + 1}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 10,
+                      }}
+                    >
+                      {round.map((match, matchIdx) => (
+                        <div
+                          key={matchIdx}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 8,
+                            background: "#f8f9fa",
+                            borderRadius: 10,
+                            padding: "10px 14px",
+                            fontSize: 14,
+                            fontWeight: 700,
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: match[0]?.color?.bg ?? "#333",
+                              minWidth: 72,
+                              textAlign: "center",
+                            }}
+                          >
+                            {match[0]?.color?.name ?? "—"}チーム
+                          </span>
+                          <span style={{ color: "#999", fontSize: 12 }}>
+                            vs
+                          </span>
+                          <span
+                            style={{
+                              color: match[1]?.color?.bg ?? "#333",
+                              minWidth: 72,
+                              textAlign: "center",
+                            }}
+                          >
+                            {match[1]?.color?.name ?? "—"}チーム
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              color: "#aaa",
+                              marginLeft: 4,
+                            }}
+                          >
+                            コート{matchIdx + 1}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <div
+                  style={{
+                    marginTop: 12,
+                    fontSize: 12,
+                    color: "#888",
+                    textAlign: "center",
+                  }}
+                >
+                  全{currentPractice?.teams?.length ?? 0}チーム・
+                  {((currentPractice?.teams?.length ?? 0) *
+                    ((currentPractice?.teams?.length ?? 0) - 1)) /
+                    2}
+                  試合を過不足なく表示
+                </div>
+              </div>
+            </div>
+          )}
         </>
       ) : (
         <div

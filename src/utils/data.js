@@ -63,34 +63,86 @@ export function distributeTeams(presentMembers, numTeams) {
   return teams;
 }
 
-/** 2コート用：全チームの試合組み合わせを過不足なくラウンド分けする（1ラウンド最大2試合＝4チーム） */
+/** @internal ラウンドロビンの各スロット（チーム重複なしの試合群）を生成 */
+function buildRoundRobinSlots(teams) {
+  const hasBye = teams.length % 2 !== 0;
+  const list = hasBye ? [...teams, null] : [...teams]; // null = 不戦チーム
+  const m = list.length; // 偶数に揃える
+
+  const fixed = list[0];
+  const rotating = list.slice(1);
+  const slots = [];
+
+  for (let r = 0; r < m - 1; r++) {
+    // rotating を r 個後ろにシフト
+    const rot =
+      r === 0
+        ? [...rotating]
+        : [...rotating.slice(rotating.length - r), ...rotating.slice(0, rotating.length - r)];
+
+    const slot = [];
+    // fixed と rot[0] のペア
+    if (fixed !== null && rot[0] !== null) slot.push([fixed, rot[0]]);
+    // rot[i] と rot[末尾-i] のペア
+    for (let i = 1; i < m / 2; i++) {
+      const a = rot[i];
+      const b = rot[m - 1 - i];
+      if (a !== null && b !== null) slot.push([a, b]);
+    }
+    slots.push(slot);
+  }
+
+  return slots;
+}
+
+/**
+ * 2コート用：全チームの試合組み合わせをラウンド数最小でスケジュールする
+ * ① ラウンドロビンでスロット生成（各スロット内はチーム被りなし）
+ * ② courts サイズにチャンク化
+ * ③ 端数チャンク同士を貪欲マージしてさらに削減
+ */
 export function getMatchSchedule(teams, courts = 2) {
   if (!teams || teams.length < 2) return [];
 
-  const pairs = [];
-  for (let i = 0; i < teams.length; i++) {
-    for (let j = i + 1; j < teams.length; j++) {
-      pairs.push([teams[i], teams[j]]);
-    }
-  }
+  // ① ラウンドロビンスロット → courts ごとにチャンク化
+  const slots = buildRoundRobinSlots(teams);
+  const chunks = slots.flatMap((slot) => {
+    const result = [];
+    for (let i = 0; i < slot.length; i += courts) result.push(slot.slice(i, i + courts));
+    return result;
+  });
 
+  // ② 端数チャンク同士を貪欲マージ
   const rounds = [];
   const used = new Set();
 
-  while (used.size < pairs.length) {
-    const round = [];
-    const teamsInRound = new Set();
+  for (let i = 0; i < chunks.length; i++) {
+    if (used.has(i)) continue;
 
-    for (let i = 0; i < pairs.length; i++) {
-      if (used.has(i)) continue;
-      const [a, b] = pairs[i];
-      if (teamsInRound.has(a.id) || teamsInRound.has(b.id)) continue;
-      round.push([a, b]);
-      teamsInRound.add(a.id);
-      teamsInRound.add(b.id);
+    const chunk = chunks[i];
+    if (chunk.length >= courts) {
+      rounds.push(chunk);
       used.add(i);
-      if (round.length >= courts) break;
+      continue;
     }
+
+    // 端数 → 後続の端数と合体を試みる
+    const round = [...chunk];
+    const teamsInRound = new Set(round.flatMap(([a, b]) => [a.id, b.id]));
+    used.add(i);
+
+    for (let j = i + 1; j < chunks.length; j++) {
+      if (used.has(j) || round.length >= courts) continue;
+      const candidate = chunks[j];
+      if (round.length + candidate.length > courts) continue;
+      const fits = candidate.every(([a, b]) => !teamsInRound.has(a.id) && !teamsInRound.has(b.id));
+      if (fits) {
+        round.push(...candidate);
+        candidate.forEach(([a, b]) => { teamsInRound.add(a.id); teamsInRound.add(b.id); });
+        used.add(j);
+      }
+    }
+
     rounds.push(round);
   }
 

@@ -1,7 +1,7 @@
 // src/App.jsx
 import { useState, useEffect } from "react";
 import styles from "./utils/styles";
-import { ROSTER, distributeTeams } from "./utils/data";
+import { ROSTER, distributeTeams, getMatchSchedule } from "./utils/data";
 import Header from "./components/Header";
 import PracticeSelectPage from "./components/PracticeSelectPage";
 import AttendancePage from "./components/AttendancePage";
@@ -149,6 +149,7 @@ export default function App() {
       ...currentPractice,
       teamsGenerated: false,
       teams: [],
+      matchSchedule: [],
       attendance: updatedAttendance,
     });
   };
@@ -176,17 +177,23 @@ export default function App() {
     if (present.length < numTeams) return;
 
     const result = distributeTeams(present, numTeams);
+    const schedule = getMatchSchedule(result, 2); // 2コート用の試合組み合わせ
+    // Firestoreは配列の入れ子不可のため、ラウンドごとに { matches: [{ team1Id, team2Id }, ...] } で保存
+    const matchSchedule = schedule.map((round) => ({
+      matches: round.map(([a, b]) => ({ team1Id: a.id, team2Id: b.id })),
+    }));
     const updatedAttendance = currentPractice.attendance.map((m) => {
       const found = result.find((t) => t.members.some((tm) => tm.id === m.id));
       return { ...m, team: found ? found.id : null };
     });
 
-    // Firestoreのデータを上書き！
+    // Firestoreのデータを上書き！（チーム結果 + 試合組み合わせを同時に保存）
     await setDoc(doc(db, "practices", currentPractice.id), {
       ...currentPractice,
       attendance: updatedAttendance,
       teams: result,
       teamsGenerated: true,
+      matchSchedule,
     });
   };
 
